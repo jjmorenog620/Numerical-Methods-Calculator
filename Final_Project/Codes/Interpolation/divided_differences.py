@@ -2,85 +2,78 @@ import numpy as np
 import sympy as sym
 import matplotlib.pyplot as plt
 
-def divided_differences(xi,fi):
-    xi = np.array(xi,dtype=float)
-    fi = np.array(fi,dtype=float)
-    title = ['i   ','xi  ','fi  ']
-    n = len(xi)
-    ki = np.arange(0,n,1)
-    board = np.concatenate(([ki],[xi],[fi]),axis=0)
-    board = np.transpose(board)
-    dfinite = np.zeros(shape=(n,n),dtype=float)
-    board = np.concatenate((board,dfinite), axis=1)
+def calculate_divided_differences(x_values, f_values):
+    """
+    Calculates the divided differences and returns the polynomial, x points, and y points.
 
-    # calculate board
-    [n,m] = np.shape(board)
-    diagonal = n-1
-    j = 3
+    Args:
+        x_values (list): List of x values.
+        f_values (list): List of f values (y values).
 
-    while (j < m):
-        # add title
-        title.append('F['+str(j-2)+']')
+    Returns:
+        tuple: A tuple containing the polynomial, x points, and y points.
+    """
+    x = sym.Symbol('x')  # Symbolic variable for polynomial expression
+    x_i = np.array(x_values, dtype=float)  # Convert x values to a NumPy array
+    f_i = np.array(f_values, dtype=float)  # Convert f values to a NumPy array
+    n = len(x_i)  # Number of data points
 
-        i = 0
-        step = j-2 # start in 1
-        while (i < diagonal):
-            denominator = (xi[i+step]-xi[i])
-            numerator = board[i+1,j-1]-board[i,j-1]
-            board[i,j] = numerator/denominator
-            i = i+1
-        diagonal = diagonal - 1
-        j = j+1
+    board = np.zeros(shape=(n, n), dtype=float)  # Create a square matrix to store divided differences
+    board[:, 0] = x_i  # Set the first column of the matrix as x_i values
+    board[:, 1] = f_i  # Set the second column of the matrix as f_i values
 
-    dDivid = board[0,3:]
-    n = len(dfinite)
+    # Calculate divided differences recursively
+    for j in range(2, n + 1):
+        for i in range(n - j + 1):
+            denominator = (board[i + j - 1, 0] - board[i, 0])  # Calculate denominator for the divided difference
+            numerator = board[i + 1, j - 1] - board[i, j - 1]  # Calculate numerator for the divided difference
+            board[i, j] = numerator / denominator  # Store the divided difference in the matrix
 
-    # expresión del polinomio con Sympy
-    x = sym.Symbol('x')
-    polynomial = fi[0]
-    for j in range(1,n,1):
-        factor = dDivid[j-1]
-        term = 1
-        for k in range(0,j,1):
-            term *= (x-xi[k])
-        polynomial = polynomial + term*factor
+    p_xi = np.linspace(np.min(x_i), np.max(x_i), num=101)  # Generate x points for plotting
+    p_fi = np.zeros_like(p_xi)  # Initialize an array to store the evaluated polynomial at x points
 
-    # simplify (x-xi)
-    polisimple = polynomial.expand()
+    # Evaluate the polynomial using Horner's method
+    for i in range(n):
+        term = board[0, i + 1]  # Get the coefficient of the current term
+        for j in range(i):
+            term *= (x - board[j, 0])  # Multiply the term by (x - x_i)
+        p_fi += term  # Add the current term to the polynomial
 
-    # numerical eval
-    px = sym.lambdify(x,polisimple)
+    p_x = sym.lambdify(x, p_fi)  # Convert the polynomial expression to a callable function
+    p_fi = p_x(p_xi)  # Evaluate the polynomial at the x points
 
-    # points
-    samples = 101
-    a = np.min(xi)
-    b = np.max(xi)
-    pxi = np.linspace(a,b,samples)
-    pfi = px(pxi)
-
-    return polisimple, pxi, pfi
+    return p_fi, p_xi, p_fi  # Return the polynomial, x points, and y points
 
 
-def defmatrix(n):
+def define_matrix(size):
+    """
+    Prompts the user to input data and returns a list.
+
+    Args:
+        size (int): Size of the data list.
+
+    Returns:
+        list: A list of user input data.
+    """
     matrix = []
-    n = int(n)
-    matrix = [float(input("input data: ")) for i in range(n)] 
+    size = int(size)
+    matrix = [float(input("Input data: ")) for _ in range(size)]
     return matrix
 
-size = input("Input the size of the arrays: ")
-print("Input Xi data : ")
-xi = defmatrix(size)
-print("Input Yi data: ")
-fi = defmatrix(size)
+array_size = input("Input the size of the arrays: ")
+print("Input x values: ")
+x_i_values = define_matrix(array_size)  # List of x values
+print("Input f values: ")
+f_i_values = define_matrix(array_size)  # List of f values (y values)
 
-polynomial,pxi,pfi=divided_differences(xi,fi)
-print("Polynomial: ", polynomial)
+poly, p_xi, p_fi = calculate_divided_differences(x_i_values, f_i_values)
+print("Polynomial: ", poly)
 
 # Graph
-plt.plot(xi,fi,'o', label = 'Points')
-plt.plot(pxi,pfi, label = 'Polynomial')
+plt.plot(x_i_values, f_i_values, 'o', label='Points')  # Plotting the input points
+plt.plot(p_xi, p_fi, label='Polynomial')  # Plotting the polynomial curve
 plt.legend()
-plt.xlabel('xi')
-plt.ylabel('fi')
-plt.title(polynomial)
+plt.xlabel('x_i')
+plt.ylabel('f_i')
+plt.title(poly)
 plt.show()
