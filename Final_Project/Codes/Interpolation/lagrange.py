@@ -1,62 +1,77 @@
-from matplotlib.projections import polar
 import numpy as np
 import sympy as sym
 import matplotlib.pyplot as plt
 
-def Lagrange(xi,fi):
+def lagrange_interpolation(x_values, y_values):
     '''
-    This function is where Lagrange method occurs
-    '''
-    xi = np.array(xi)
-    fi = np.array(fi)
-    n = len(xi)
-    x = sym.Symbol('x')
-    pol = 0
-    div = np.zeros(n, dtype = float)
+    Perform Lagrange interpolation using the given x and y values.
 
-    for i in range(0,n,1):
+    Args:
+        x_values (list): List of x values.
+        y_values (list): List of y values.
+
+    Returns:
+        tuple: A tuple containing the polynomial, x points, and y points.
+    '''
+    x_values = np.array(x_values)
+    y_values = np.array(y_values)
+    n = len(x_values)
+    x = sym.Symbol('x')
+    polynomial = 0
+    div = np.zeros(n, dtype=float)
+
+    for i in range(0, n):
         numerator = 1
         denominator = 1
-        for j  in range(0,n,1):
-            if (j!=i):
-                numerator *= (x-xi[j])
-                denominador = denominator * (xi[i]-xi[j])
-        Li = numerator/denominator
+        for j in range(0, n):
+            if j != i:
+                numerator *= (x - x_values[j])
+                denominator *= (x_values[i] - x_values[j])
+        Li = numerator / denominator
 
-        pol = pol + Li*fi[i]
+        polynomial += Li * y_values[i]
         div[i] = denominator
 
-    psimple = pol.expand()
-    px = sym.lambdify(x,psimple)
-    samples = 101
-    a = np.min(xi)
-    b = np.max(xi)
-    pxi = np.linspace(a,b,samples)
-    pfi = px(pxi)
-    return psimple,pxi,pfi
+    simplified_polynomial = polynomial.expand()
+    px = sym.lambdify(x, simplified_polynomial)
 
-def defmatrix(n):
+    num_samples = 101
+    a = np.min(x_values)
+    b = np.max(x_values)
+    x_samples = np.linspace(a, b, num_samples)
+    y_samples = px(x_samples)
+
+    return simplified_polynomial, x_samples, y_samples
+
+def create_matrix(n):
     '''
-    This function creates an n * m Matrix
+    Create an n x m matrix.
+
+    Args:
+        n (int): Number of rows.
+
+    Returns:
+        list: A list of user input data.
     '''
-    matriz = []
+    matrix = []
     n = int(n)
-    matrix = [float(input("Input data: ")) for i in range(n)] 
+    matrix = [float(input("Input data: ")) for _ in range(n)] 
     return matrix
 
 size = input("Input the size of the arrays: ")
-print("Input your Xi data: (float) ")
-xi = defmatrix(size)
-print("Input your Yi data: (float) ")
-fi = defmatrix(size)
-psimple,pxi,pfi=Lagrange(xi,fi)
-print("Polynomial: ", psimple)
+print("Input your x values: (float)")
+x_values = create_matrix(size)
+print("Input your y values: (float)")
+y_values = create_matrix(size)
+
+polynomial, x_samples, y_samples = lagrange_interpolation(x_values, y_values)
+print("Polynomial: ", polynomial)
 
 # Make chart with plt
-plt.plot(xi,fi,'o', label = 'Points')
-plt.plot(pxi,pfi, label = 'Polynomial')
+plt.plot(x_values, y_values, 'o', label='Points')
+plt.plot(x_samples, y_samples, label='Polynomial')
 plt.legend()
-plt.xlabel('xi')
-plt.ylabel('fi')
-plt.title(psimple)
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title(polynomial)
 plt.show()
