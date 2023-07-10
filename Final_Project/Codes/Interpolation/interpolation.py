@@ -1,57 +1,73 @@
-# Import numpy and plt
 import numpy as np
 import matplotlib.pyplot as plt
 
-def Interpolation(xi,fi):
-    ''' 
-    This function is where interpolation happens
+def interpolation(x_values, y_values):
     '''
-    xi = np.array(xi) # Initial X
-    fi = np.array(fi) 
-    lenghtOfXi = len(xi)
-    A=np.zeros((lenghtOfXi,lenghtOfXi)) # create a new array of given shape and fill with zero values
-    for i in range(lenghtOfXi):
-        A.T[i] = xi**i
-    a=np.linalg.solve(A,fi)
+    Perform interpolation using the given x and y values.
 
-    xteor = np.linspace(min(xi),max(xi),100)
-    yteor = 0
-    for i in range(lenghtOfXi):
-        yteor = yteor + a[i] * xteor **i
-    board=[[], []]
-    for i in range(len(xteor)):
-        board[0].append(xteor[i])
-        board[1].append(yteor[i])
-    return board
+    Args:
+        x_values (list): List of x values.
+        y_values (list): List of y values.
 
-def defmatrix(n):
-    ''' 
-    This function creates an n * m matrix
+    Returns:
+        list: A list containing x and y values of the interpolated curve.
+    '''
+    x_values = np.array(x_values)  # Convert x values to NumPy array
+    y_values = np.array(y_values)  # Convert y values to NumPy array
+    length_of_x = len(x_values)
+
+    A = np.zeros((length_of_x, length_of_x))  # Create a square matrix of zeros
+    for i in range(length_of_x):
+        A.T[i] = x_values ** i  # Assign powers of x to each column of the matrix
+    coefficients = np.linalg.solve(A, y_values)  # Solve the linear system of equations
+
+    x_theoretical = np.linspace(min(x_values), max(x_values), 100)  # Generate x values for the interpolated curve
+    y_theoretical = np.zeros_like(x_theoretical)  # Initialize an array to store the interpolated y values
+
+    for i in range(length_of_x):
+        y_theoretical += coefficients[i] * x_theoretical ** i  # Compute the interpolated y values
+
+    interpolated_values = [[], []]  # List to store interpolated x and y values
+    for i in range(len(x_theoretical)):
+        interpolated_values[0].append(x_theoretical[i])
+        interpolated_values[1].append(y_theoretical[i])
+
+    return interpolated_values
+
+def create_matrix(n):
+    '''
+    Create an n x m matrix.
+
+    Args:
+        n (int): Number of rows.
+
+    Returns:
+        list: A list of user input data.
     '''
     matrix = []
     n = int(n)
-    matrix = [float(input('Input your data: ')) for i in range(n)] 
+    matrix = [float(input('Input your data: ')) for _ in range(n)]
     return matrix
 
 size = input("Input the size of the arrays: ")
 
-print("Input your Xi data: ")
-xi = defmatrix(size)
-print("Input your Yi data: ")
-fi = defmatrix(size)
+print("Input your x values: ")
+x_values = create_matrix(size)
+print("Input your y values: ")
+y_values = create_matrix(size)
 
-board = Interpolation(xi,fi)
+interpolated_points = interpolation(x_values, y_values)
 
-print("Xi\t\t\tYi")
-for i in range(len(board[0])):
-    print(board[0][i],"\t",board[1][i])
+print("x\t\t\ty")
+for i in range(len(interpolated_points[0])):
+    print(interpolated_points[0][i], "\t", interpolated_points[1][i])
 
-# Make chart with plt
+# Plot the interpolated curve
 
-plt.plot(xi,fi,'ro')
-plt.plot(board[0],board[1],'b-')
+plt.plot(x_values, y_values, 'ro', label='Original Data')
+plt.plot(interpolated_points[0], interpolated_points[1], 'b-', label='Interpolated Curve')
 plt.legend()
-plt.xlabel('X')
-plt.ylabel('Y')
+plt.xlabel('x')
+plt.ylabel('y')
 plt.title("Interpolation")
 plt.show()
