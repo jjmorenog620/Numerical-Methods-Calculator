@@ -1,34 +1,35 @@
 import sympy as sp
 
-x=sp.symbols('x')
+x = sp.symbols('x')
 
-def function(eq):
+def create_symbolic_function(eq):
     global x
     return sp.sympify(eq)
 
-def Newton(eq,x_0,es,maxIte):
+def newton_method(eq, x_0, es, max_iterations):
     global x
-    eq=function(eq)
-    d=sp.diff(eq)
-    f_NR=x-(eq/d)
-    ea=100 
-    x_r=x_0
-    inter=0
-    while ea>es:
-        x_prev=x_r
-        x_r=f_NR.evalf(subs={x:x_prev})
-        if x_r !=0:
-            ea=abs((x_r-x_prev)/x_r)*100
-        inter+=1
-        
-        if inter>=maxIte:
+    eq = create_symbolic_function(eq)
+    d = sp.diff(eq)
+    f_NR = x - (eq / d)
+    ea = 100
+    x_r = x_0
+    iterations = 0
+
+    while ea > es:
+        x_prev = x_r
+        x_r = f_NR.evalf(subs={x: x_prev})
+        if x_r != 0:
+            ea = abs((x_r - x_prev) / x_r) * 100
+        iterations += 1
+
+        if iterations >= max_iterations:
             break
-        
-    print('The solution is '+str(x_r)+', with an eror of '+str(ea)+', in '+ str(inter)+ ' iterations')
+
+    print('The solution is ' + str(x_r) + ', with an error of ' + str(ea) + ', in ' + str(iterations) + ' iterations')
     
-fun=input("Put the function: ")
-x_0=float(input("Put X0: "))
-tol=float(input("Put tolerance: "))
-maxIte=int(input("Put max iterations: "))
-Newton(fun,x_0,tol,maxIte)
-    
+function_expression = input("Enter the function expression: ")
+x_0 = float(input("Enter X0: "))
+tolerance = float(input("Enter tolerance: "))
+max_iterations = int(input("Enter max iterations: "))
+
+newton_method(function_expression, x_0, tolerance, max_iterations)
